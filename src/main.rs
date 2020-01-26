@@ -1,7 +1,5 @@
-#![feature(duration_float)]
-
-use openssl::sha::sha256;
-use std::time::{Instant};
+use ring::digest::*;
+use std::time::Instant;
 use time;
 use xorshift::{Rand, Rng, SeedableRng, SplitMix64, Xoroshiro128};
 
@@ -25,19 +23,16 @@ fn simple_sha2_256(value: &[u8]) {
         buffer[16..24].copy_from_slice(&rng.next_u64().to_ne_bytes());
         buffer[24..32].copy_from_slice(&rng.next_u64().to_ne_bytes());
 
-        let result = sha256(&buffer);
-        
+        let result = digest(&SHA256, &buffer);
         let mut current_difficulty: u32 = 0;
 
-        unsafe {
-            let result_u32 = std::mem::transmute::<[u8; 32], [u32; 8]>(result);
-            for element in &result_u32 {
-                let zeros = element.leading_zeros();
-                current_difficulty += zeros;
+        let result_u32 = result.as_ref();
+        for element in result_u32 {
+            let zeros = element.leading_zeros();
+            current_difficulty += zeros;
 
-                if zeros < 32 {
-                    break;
-                }
+            if zeros < 8 {
+                break;
             }
         }
 
