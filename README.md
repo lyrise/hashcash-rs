@@ -1,4 +1,4 @@
-# Hashcash by Rust
+# Hashcash
 
 ## License
 
